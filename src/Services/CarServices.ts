@@ -20,21 +20,27 @@ class CarService {
 
   async get(id?: string): Promise<IResponse> {
     if (id) {
-      if (!isValidObjectId(id)) {
-        return answerError(422, 'Invalid mongo id');
-      }
-      const car = await this.model.getById(id);
-      if (!car) {
-        return answerError(404, 'Car not found');
-      }
-  
-      const carDomain = CarService.createDomain(car);
-      return answer(200, carDomain);
+      return this.getCarById(id);
     }
+
     const cars = await this.model.get();
     const carsDomains = cars ? cars.map((car) => CarService.createDomain(car)) : [];
 
     return answer(200, carsDomains);
+  }
+
+  private async getCarById(id: string): Promise<IResponse> {
+    if (!isValidObjectId(id)) {
+      return answerError(422, 'Invalid mongo id');
+    }
+  
+    const car = await this.model.getById(id);
+    if (!car) {
+      return answerError(404, 'Car not found');
+    }
+    
+    const carDomain = CarService.createDomain(car);
+    return answer(200, carDomain);
   }
 }
 
