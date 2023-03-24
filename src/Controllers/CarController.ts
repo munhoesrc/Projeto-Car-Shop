@@ -16,6 +16,16 @@ class CarController {
       next(error);
     }
   };
+
+  public get = async (req: Request, res: Response, next: NextFunction): Promise<void> => {
+    try {
+      const { id } = req.params;
+      const { status, message } = await this.service.get(id);      
+      res.status(status).json(message);
+    } catch (error) {
+      next(error);
+    }
+  };
 }
 
 export default CarController;
