@@ -1,11 +1,12 @@
-import { Model, Schema, model } from 'mongoose';
+import { Model, Schema, model, models } from 'mongoose';
 import ICar from '../Interfaces/ICar';
 
 class CarODM {
   private model: Model<ICar>;
+  private schema: Schema;
 
   constructor() {
-    const schema = new Schema<ICar>({
+    this.schema = new Schema<ICar>({
       model: { type: String, required: true },
       year: { type: Number, required: true },
       color: { type: String, required: true },
@@ -15,7 +16,7 @@ class CarODM {
       seatsQty: { type: Number, required: true },
     });
 
-    this.model = model<ICar>('Car', schema);
+    this.model = models.Car || model('Car', this.schema);
   }
 
   async create(car: ICar) {
@@ -33,7 +34,8 @@ class CarODM {
   
   async getById(id: string) {
     try {
-      const car = await this.model.findOne({ _id: id });
+      // const car = await this.model.findOne({ _id: id });
+      const car = await this.model.findById(id);
       return car;
     } catch (error) {
       return null;

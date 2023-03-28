@@ -4,9 +4,36 @@ import { Model } from 'mongoose';
 import sinon from 'sinon';
 import Car from '../../../src/Domains/Car';
 import CarService from '../../../src/Services/CarServices';
+import ICar from '../../../src/Interfaces/ICar';
 
 describe('CarService', function () {
-  const car = {
+  const mock = [
+    new Car({
+      id: '641b5cade028df261c85d370',
+      model: 'Marea',
+      year: 2002,
+      color: 'Black',
+      status: true,
+      buyValue: 15.99,
+      doorsQty: 4,
+      seatsQty: 5,
+    }),
+  ];
+  
+  const service = new CarService();
+
+  const carsExit = new Car({
+    id: '641b5cade028df261c85d370',
+    model: 'Marea',
+    year: 2002,
+    color: 'Black',
+    status: true,
+    buyValue: 15.99,
+    doorsQty: 4,
+    seatsQty: 5,
+  });
+  
+  const car: ICar = {
     model: 'Marea',
     year: 2002,
     color: 'Black',
@@ -16,73 +43,100 @@ describe('CarService', function () {
     seatsQty: 5,
   };
 
-  const validId = '641b5cade028df261c85d370';
-  const invalidId = '1s4';
+  const mockUpdate = [
+    new Car({
+      id: '641b5cade028df261c85d370',
+      model: 'Marea',
+      year: 2002,
+      color: 'Red',
+      status: true,
+      buyValue: 12.99,
+      doorsQty: 2,
+      seatsQty: 5,
+    }),
+  ];
 
-  const validCar = new Car({
-    id: validId,
-    ...car,
+  const updateCar: ICar = {
+    model: 'Marea',
+    year: 2002,
+    color: 'Red',
+    status: true,
+    buyValue: 12.99,
+    doorsQty: 2,
+    seatsQty: 5,
+  };
+
+  it('Deve testar se adiciona um carro', async function () {
+    sinon.stub(Model, 'create').resolves(carsExit);
+
+    const result = await service.create(car);
+    expect(result.message)
+      .to
+      .deep
+      .equal(carsExit);
   });
 
-  const carsOutput = [validCar];
-
-  beforeEach(function () {
-    sinon.stub(Model, 'create').resolves(validCar);
-    sinon.stub(Model, 'find').resolves(carsOutput);
-    sinon.stub(Model, 'findById').resolves(validCar);
+  it('Deve testar se lista todos os carros', async function () {
+    sinon.stub(Model, 'find').resolves(mock);
+    
+    const result = await service.get();
+    expect(result.message)
+      .to
+      .deep
+      .equal(mock);
   });
 
-  afterEach(function () {
-    sinon.restore();
-  });
+  it('Deve testar se encontra carro por ID', async function () {
+    sinon.stub(Model, 'findById').resolves(mock[0]);
+    
+    const result = await service.get('641b5cade028df261c85d370');
+    expect(result.message)
+      .to
+      .deep
+      .equal(mock[0]);
+  }); 
 
-  describe('create', function () {
-    it('adiciona um novo carro', async function () {
-      const service = new CarService();
-      const result = await service.create(car);
-      expect(result).to.deep.equal({ message: validCar });
-    });
-  });
+  it('Deve testar ID inválido', async function () {
+    sinon.stub(Model, 'findById').resolves(mock[0]);
+    
+    const result = await service.get('1s4');
+    expect(result.message)
+      .to
+      .deep
+      .equal({ message: 'Invalid mongo id' });
+  }); 
 
-  describe('get', function () {
-    it('retorna todos os carros', async function () {
-      const service = new CarService();
-      const result = await service.get();
-      expect(result).to.deep.equal({ message: carsOutput });
-    });
+  it('Deve testar entrada de "car" inválido', async function () {
+    sinon.stub(Model, 'findById').resolves(mock[1]);
+    
+    const result = await service.get('641b5cade028df261c85d370');
+    expect(result.message)
+      .to
+      .deep
+      .equal({ message: 'Car not found' });
+  }); 
 
-    it('retorna um carro por id válido', async function () {
-      const service = new CarService();
-      const result = await service.get(validId);
-      expect(result).to.deep.equal({ message: validCar });
-    });
+  it('Deve testar se é possível alterar pelo ID', async function () {
+    sinon.stub(Model, 'findByIdAndUpdate').resolves(mockUpdate[0]);
 
-    it('retorna erro para um id inválido', async function () {
-      const service = new CarService();
-      const result = await service.get(invalidId);
-      expect(result).to.deep.equal({ message: 'Invalid mongo id' });
-    });
+    const result = await service.update('641b5cade028df261c85d370', updateCar);
 
-    it('Testa busca por carro inválido', async function () {
-      sinon.stub(Model, 'findById').resolves(null);
-  
-      const service = new CarService();
-      const result = await service.get('641b5cade028df261c85d370');
-  
-      expect(result.message).to.deep.equal({ message: 'Car not found' });
-    }); 
-  
-    it('Testa busca por ID inválido', async function () {
-      sinon.stub(Model, 'findById').resolves(null);
-  
-      const service = new CarService();
-      const result = await service.get('id inválido');
-  
-      expect(result.message).to.deep.equal({ message: 'Invalid mongo id' });
-    }); 
-  
-    afterEach(function () {
-      sinon.restore();
-    });  
-  });
+    expect(result.message)
+      .to
+      .deep
+      .equal(mockUpdate[0]);
+  }); 
+
+  it('Deve testar se não é possível alterar com ID inválido', async function () {
+    sinon.stub(Model, 'findByIdAndUpdate').resolves(mockUpdate[0]);
+
+    const result = await service.update('1s4', updateCar);
+
+    expect(result.message)
+      .to
+      .deep
+      .equal({ message: 'Invalid mongo id' });
+  }); 
+
+  afterEach(sinon.restore);
 });
