@@ -7,5 +7,6 @@ const routesCar = Router();
 routesCar.post('/cars', newControl.create.bind(newControl));
 routesCar.get('/cars', newControl.get.bind(newControl));
 routesCar.get('/cars/:id', newControl.get.bind(newControl));
+routesCar.put('/cars/:id', newControl.update.bind(newControl));
 
 export default routesCar;
